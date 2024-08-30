@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [isLandscape, setLandscape] = useState(false);
   const [clock, setClock] = useState({
     seconds: "00",
     minutes: "00",
     hours: "00",
+    sMovement: 0,
+    mMovement: 0,
+    hMovement: 0,
   });
 
   function formatTime(time: number) {
@@ -18,18 +22,37 @@ export default function Home() {
     let hours = formatTime(date.getHours());
     let minutes = formatTime(date.getMinutes());
     let seconds = formatTime(date.getSeconds());
-    setClock({ hours, minutes, seconds });
+
+    const sMovement = +seconds * 6;
+    const mMovement = +minutes * 6 + +seconds / 10;
+    const hMovement = +hours * 30 + +minutes / 2 + +seconds / 120;
+
+    setClock({ hours, minutes, seconds, sMovement, mMovement, hMovement });
   }
 
   useEffect(() => {
-    const interval = setInterval(handleDate, 1000);
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    if (width > height) setLandscape(true);
+    else setLandscape(false);
+  }, []);
 
+  useEffect(() => {
+    const interval = setInterval(handleDate, 1000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <section className="w-full h-full flex flex-col items-center justify-center gap-4">
-      <div className="relative w-full aspect-square rounded-full bg-white border">
+      <div
+        className={`relative aspect-square rounded-full bg-white border-8 md:border-[20px] ${
+          isLandscape ? "h-full" : "w-full"
+        }`}
+      >
+        <div className="absolute w-full h-full flex flex-col items-center pt-32">
+          <span className="text-gray-500">bytecraftr</span>
+        </div>
+
         {Array.from({ length: 12 }, (_, i) => i).map((numb) => {
           return (
             <div
@@ -72,33 +95,25 @@ export default function Home() {
         {/* hours */}
         <div
           className={`absolute left-[calc(50%-6px)] origin-center w-[12px] h-full ${
-            +clock.minutes ? "duration-1000" : ""
+            +clock.minutes ? "duration-100" : ""
           }`}
-          style={{
-            transform: `rotate(${
-              +clock.hours * 30 + +clock.seconds / 6 / 6
-            }deg)`,
-          }}
+          style={{ transform: `rotate(${clock.hMovement}deg)` }}
         >
           <div className="absolute top-[25%] w-full h-[35%] bg-black rounded-lg border" />
         </div>
         {/* minutes */}
         <div
           className="absolute left-[calc(50%-3px)] origin-center w-[6px] h-full"
-          style={{
-            transform: `rotate(${+clock.minutes * 6 + +clock.seconds / 12}deg)`,
-          }}
+          style={{ transform: `rotate(${clock.mMovement}deg)` }}
         >
           <div className="absolute top-[10%] w-full h-[50%] bg-black rounded-lg border" />
         </div>
         {/* seconds */}
         <div
           className={`absolute left-[calc(50%-1px)] origin-center w-[2px] h-full ${
-            +clock.seconds ? "duration-1000" : ""
+            +clock.seconds ? "duration-100" : ""
           }`}
-          style={{
-            transform: `rotate(${+clock.seconds * 6}deg)`,
-          }}
+          style={{ transform: `rotate(${clock.sMovement}deg)` }}
         >
           <div className="absolute top-[5%] w-full h-[60%] bg-red-500" />
           <span className="absolute top-10 md:top-14 md:-left-2 text-black md:text-2xl whitespace-nowrap rotate-90">
